@@ -36,7 +36,8 @@ const serializeRows = (rows) =>
 
 let handled = 0
 while (true) {
-  Atomics.wait(shared, 0, handled)
+  const wait = Atomics.waitAsync(shared, 0, handled)
+  if (wait.async) await wait.value
   const current = Atomics.load(shared, 0)
   if (current === handled) continue
   handled = current

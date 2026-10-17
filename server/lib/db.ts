@@ -217,15 +217,12 @@ export async function runMigrations(directory: string) {
     name TEXT PRIMARY KEY,
     appliedAt TEXT NOT NULL
   )`)
-  const applied = new Set(
-    (db.prepare('SELECT name FROM schema_migration').all() as { name: string }[])
-      .map((row) => row.name),
-  )
   const files = readdirSync(directory).filter((name) => /^\d+-migration\.js$/.test(name)).sort()
   for (const name of files) {
-    if (applied.has(name)) continue
     const module = await import(pathToFileURL(join(directory, name)).href)
     db.transaction(() => {
+      const applied = db.prepare('SELECT name FROM schema_migration WHERE name = ?').get(name)
+      if (applied) return
       module.run(sql)
       db.prepare('INSERT INTO schema_migration (name, appliedAt) VALUES (?, ?)')
         .run(name, new Date().toISOString())
