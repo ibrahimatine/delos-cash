@@ -19,4 +19,4 @@ jobs:
           fi
           curl --fail --silent --show-error --retry 2 \
             -H "Authorization: Bearer $CRON_SECRET" \
-            https://delos-cash.vercel.app/api/cron/reconcile
+            https://delos-cash-ibrahima-tines-projects.vercel.app/api/cron/reconcile
