@@ -34,3 +34,5 @@ backups/
 # files of the demo documents: generated (pnpm seed-files),
 # only their manifest web/lib/seed-files.ts is committed
 server/seed-files/
+.vercel
+.env.local
