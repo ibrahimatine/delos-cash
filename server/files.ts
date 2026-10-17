@@ -277,7 +277,9 @@ const upload = async (req: Request, url: URL) => {
 
 /** Issues a scoped Blob token so 5 Mo files bypass Vercel's 4.5 MB body cap. */
 const uploadToken = async (req: Request, url: URL) => {
-  if (!DATABASE_URL) return undefined
+  if (!DATABASE_URL) {
+    return json(404, { message: 'Dépôt direct indisponible.' })
+  }
   if (req.headers.has('origin') && !sameOrigin(req, url)) {
     return json(403, { message: 'Origine refusée.' })
   }
@@ -313,7 +315,9 @@ const uploadToken = async (req: Request, url: URL) => {
 
 /** Reads a completed private upload and verifies it before adding DB metadata. */
 const completeUpload = async (req: Request, url: URL) => {
-  if (!DATABASE_URL) return undefined
+  if (!DATABASE_URL) {
+    return json(404, { message: 'Dépôt direct indisponible.' })
+  }
   if (!sameOrigin(req, url)) return json(403, { message: 'Origine refusée.' })
   const viewer = personOf(getCookies(req.headers)[SESSION_COOKIE])
   if (!viewer) return json(401, { message: 'Connexion requise.' })
