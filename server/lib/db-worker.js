@@ -1,5 +1,5 @@
 import { Pool } from '@neondatabase/serverless'
-import { workerData } from 'node:worker_threads'
+import { parentPort, workerData } from 'node:worker_threads'
 
 const CONTROL_BYTES = 64
 const MAX_MESSAGE_BYTES = 16 * 1024 * 1024
@@ -34,17 +34,10 @@ const serializeRows = (rows) =>
     ]),
   ))
 
-let handled = 0
-while (true) {
-  const wait = Atomics.waitAsync(shared, 0, handled)
-  if (wait.async) await wait.value
-  const current = Atomics.load(shared, 0)
-  if (current === handled) continue
-  handled = current
-  const length = Atomics.load(shared, 2)
+parentPort.on('message', async ({ current, bytes: requestBytes }) => {
   let response
   try {
-    const request = JSON.parse(decoder.decode(payload.slice(0, length)), revive)
+    const request = JSON.parse(decoder.decode(requestBytes), revive)
     if (request.type === 'begin') {
       if (transactionClient) throw Error('Nested database transaction.')
       transactionClient = await pool.connect()
@@ -91,4 +84,7 @@ while (true) {
   }
   Atomics.store(shared, 1, current)
   Atomics.notify(shared, 1)
-}
+})
+
+Atomics.store(shared, 6, 1)
+Atomics.notify(shared, 6)

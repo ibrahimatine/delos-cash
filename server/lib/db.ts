@@ -80,11 +80,9 @@ const postgresRequest = (request: Record<string, unknown>) => {
   const bytes = encode.encode(JSON.stringify(safeRequest))
   if (bytes.length > MAX_MESSAGE_BYTES) throw Error('Database request is too large.')
   const current = ++sequence
-  payload.set(bytes)
-  Atomics.store(control, 2, bytes.length)
   Atomics.store(control, 4, 0)
   Atomics.store(control, 0, current)
-  Atomics.notify(control, 0)
+  worker!.postMessage({ current, bytes })
   while (Atomics.load(control, 1) !== current) {
     const result = Atomics.wait(control, 1, Atomics.load(control, 1), 30_000)
     if (result === 'timed-out') throw Error('Neon query timed out.')
