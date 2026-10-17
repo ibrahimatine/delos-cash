@@ -1,0 +1,396 @@
+@import 'tailwindcss';
+
+/* sources scanned for classes (Tailwind v4 CSS-first config) */
+@source '../../';
+
+/* dark mode follows [data-theme] on <html> (web/ui/themetoggle.tsx) */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+ * Semantic tokens (DESIGN §1.5), values taken from the validated Claude
+ * Design mockup. Components only use these names, never raw colors: the
+ * dark theme is a second set of values, no dark: variant needed.
+ */
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: oklch(0.975 0.003 275);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.955 0.005 275);
+  --line: oklch(0.9 0.006 275);
+  --line-strong: oklch(0.84 0.008 275);
+  --text: oklch(0.22 0.02 275);
+  --muted: oklch(0.47 0.018 275);
+  --faint: oklch(0.68 0.012 275);
+  --accent: oklch(0.5 0.21 277);
+  --accent-hover: oklch(0.45 0.2 277);
+  --accent-soft: oklch(0.95 0.03 277);
+  --accent-ink: oklch(0.42 0.19 277);
+  --on-accent: oklch(0.99 0 0);
+  --ok: oklch(0.5 0.13 152);
+  --ok-soft: oklch(0.95 0.04 152);
+  --err: oklch(0.53 0.19 27);
+  --err-soft: oklch(0.95 0.03 27);
+  --warn: oklch(0.52 0.12 65);
+  --warn-soft: oklch(0.95 0.055 85);
+  --btc: #f7931a;
+  --btc-ink: #b8650a;
+  --btc-soft: oklch(0.96 0.04 70);
+  --shadow:
+    0 1px 2px oklch(0.2 0.02 275 / 0.06), 0 8px 24px oklch(0.2 0.02 275 / 0.06);
+  --shadow-lg:
+    0 2px 6px oklch(0.2 0.02 275 / 0.08), 0 18px 48px oklch(0.2 0.02 275 / 0.14);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: oklch(0.17 0.012 275);
+  --surface: oklch(0.215 0.014 275);
+  --surface-2: oklch(0.25 0.016 275);
+  --line: oklch(0.31 0.016 275);
+  --line-strong: oklch(0.38 0.016 275);
+  --text: oklch(0.95 0.005 275);
+  --muted: oklch(0.74 0.012 275);
+  --faint: oklch(0.55 0.012 275);
+  --accent: oklch(0.7 0.15 277);
+  --accent-hover: oklch(0.76 0.13 277);
+  --accent-soft: oklch(0.3 0.07 277);
+  --accent-ink: oklch(0.82 0.1 277);
+  --on-accent: oklch(0.16 0.03 277);
+  --ok: oklch(0.76 0.14 152);
+  --ok-soft: oklch(0.3 0.06 152);
+  --err: oklch(0.74 0.15 27);
+  --err-soft: oklch(0.31 0.07 27);
+  --warn: oklch(0.82 0.13 80);
+  --warn-soft: oklch(0.32 0.06 80);
+  --btc: #f7931a;
+  --btc-ink: #f7931a;
+  --btc-soft: oklch(0.3 0.06 60);
+  --shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px oklch(0 0 0 / 0.3);
+  --shadow-lg: 0 2px 6px oklch(0 0 0 / 0.35), 0 18px 48px oklch(0 0 0 / 0.45);
+}
+
+@theme inline {
+  --color-page: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-on-accent: var(--on-accent);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-err: var(--err);
+  --color-err-soft: var(--err-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-btc: var(--btc);
+  --color-btc-ink: var(--btc-ink);
+  --color-btc-soft: var(--btc-soft);
+  --shadow-card: var(--shadow);
+  --shadow-float: var(--shadow-lg);
+}
+
+/* DESIGN §1.4: Unbounded titles, Bricolage UI, Space Mono technical text */
+@theme {
+  --font-sans: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-display: 'Unbounded', 'Bricolage Grotesque', sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+  --font-brand: 'Nasalization', 'Nasalization Rg', 'Unbounded', sans-serif;
+  --animate-pulse-dot: pulse-dot 1.8s ease-out infinite;
+  --animate-pop: pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+  --animate-flash: flash 1.6s ease-out;
+  --animate-sheet: sheet-in 0.22s ease-out;
+  --animate-fade: fade-in 0.2s ease-out;
+
+  @keyframes pulse-dot {
+    0% {
+      box-shadow: 0 0 0 0 oklch(0.6 0.13 152 / 0.55);
+    }
+    70% {
+      box-shadow: 0 0 0 7px oklch(0.6 0.13 152 / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 oklch(0.6 0.13 152 / 0);
+    }
+  }
+  @keyframes pop {
+    0% {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+    70% {
+      transform: scale(1.08);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  @keyframes flash {
+    0% {
+      background: var(--accent-soft);
+    }
+    100% {
+      background: transparent;
+    }
+  }
+  @keyframes sheet-in {
+    from {
+      transform: translateY(24px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+  a {
+    color: var(--accent-ink);
+  }
+  a:hover {
+    color: var(--accent);
+  }
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+  button:not(:disabled),
+  [role='button'] {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--accent-soft);
+  }
+  #app {
+    opacity: 0;
+    transition: opacity 200ms ease-in;
+  }
+  dialog::backdrop {
+    background: oklch(0.15 0.02 275 / 0.45);
+  }
+}
+
+@layer components {
+  /* « Parcours de l'argent » (web/ui/money-flow.tsx): movement along a line
+     shows that money went through it. */
+  .flow-v,
+  .flow-h {
+    display: block;
+    border-radius: 2px;
+    background: var(--color-line);
+  }
+  .flow-v {
+    height: 100%;
+  }
+  .flow-v,
+  .flow-h[data-state='off'] {
+    background: var(--color-line-strong);
+  }
+  .flow-h[data-state='done'] {
+    background: repeating-linear-gradient(
+      90deg,
+      var(--color-accent) 0 9px,
+      color-mix(in oklch, var(--color-accent) 35%, transparent) 9px 14px
+    );
+    background-size: 14px 100%;
+    animation: flow-right 0.9s linear infinite;
+  }
+  .flow-v[data-state='done'] {
+    background: repeating-linear-gradient(
+      180deg,
+      var(--color-accent) 0 9px,
+      color-mix(in oklch, var(--color-accent) 35%, transparent) 9px 14px
+    );
+    background-size: 100% 14px;
+    animation: flow-down 0.9s linear infinite;
+  }
+  .flow-v[data-state='done'][data-tone='btc'] {
+    background: repeating-linear-gradient(
+      180deg,
+      var(--color-btc) 0 9px,
+      color-mix(in oklch, var(--color-btc) 35%, transparent) 9px 14px
+    );
+    background-size: 100% 14px;
+  }
+  .flow-h[data-state='wait'] {
+    background: repeating-linear-gradient(
+      90deg,
+      var(--color-accent) 0 4px,
+      transparent 4px 8px
+    );
+  }
+  .flow-v[data-state='wait'] {
+    background: repeating-linear-gradient(
+      180deg,
+      var(--color-accent) 0 4px,
+      transparent 4px 8px
+    );
+  }
+  /* a long list inside its card: the card's head stays, the list scrolls */
+  .flow-scroll {
+    max-height: min(70dvh, 640px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  /* the steps of a spending: progress, not money (no movement) */
+  .step-line {
+    display: block;
+    border-radius: 2px;
+    background: var(--color-line);
+  }
+  .step-line[data-state='done'] {
+    background: var(--color-ok);
+  }
+  .step-line[data-state='current'] {
+    background: repeating-linear-gradient(
+      90deg,
+      var(--color-ok) 0 4px,
+      transparent 4px 8px
+    );
+  }
+  .step-line[data-state='error'] {
+    background: repeating-linear-gradient(
+      90deg,
+      var(--color-err) 0 4px,
+      transparent 4px 8px
+    );
+  }
+  .flow-h[data-state='error'] {
+    background: repeating-linear-gradient(
+      90deg,
+      var(--color-err) 0 4px,
+      transparent 4px 8px
+    );
+  }
+  @keyframes flow-right {
+    to {
+      background-position: 14px 0;
+    }
+  }
+  @keyframes flow-down {
+    to {
+      background-position: 0 14px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flow-h,
+    .flow-v {
+      animation: none !important;
+    }
+  }
+
+  /* buttons: 44 px touch targets on mobile (DESIGN §1.3) */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 min-h-11 px-4
+      rounded-xl text-[15px] font-semibold no-underline transition-colors
+      select-none disabled:opacity-45;
+  }
+  .btn-sm {
+    @apply min-h-9 px-3 rounded-lg text-[13.5px];
+  }
+  .btn-primary {
+    @apply bg-accent text-on-accent hover:bg-accent-hover hover:text-on-accent;
+  }
+  .btn-secondary {
+    @apply bg-surface text-ink border border-line hover:bg-surface-2
+      hover:text-ink;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-accent-ink hover:bg-accent-soft;
+  }
+  .btn-danger {
+    @apply bg-surface text-err border border-err hover:bg-err-soft
+      hover:text-err;
+  }
+  .btn-block {
+    @apply w-full;
+  }
+  .card {
+    @apply bg-surface border border-line rounded-2xl;
+  }
+  .input {
+    @apply w-full min-h-11 px-3.5 rounded-xl border border-line bg-surface
+      text-ink placeholder:text-faint outline-none focus:border-accent;
+  }
+  .label {
+    @apply block text-[13px] font-medium text-muted mb-1.5;
+  }
+  .caption {
+    @apply font-mono text-[10.5px] font-bold uppercase tracking-[0.1em]
+      text-faint;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full border
+      border-line bg-surface text-[13.5px] font-medium whitespace-nowrap;
+  }
+  .chip[aria-pressed='true'] {
+    @apply bg-ink text-page border-ink;
+  }
+  .scroll-x {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+  .safe-bottom {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .spinner {
+    @apply inline-block w-4 h-4 flex-none rounded-full border-2
+      border-accent-soft border-t-accent animate-spin;
+  }
+  .live-dot {
+    @apply inline-block w-2 h-2 rounded-full bg-ok animate-pulse-dot;
+  }
+}

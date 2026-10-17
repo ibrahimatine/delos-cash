@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <base href="/" />
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="DELOS" />
+    <meta name="theme-color" content="#f8f8fb"
+      media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#16171d"
+      media="(prefers-color-scheme: dark)" />
+    <meta
+      name="description"
+      content="Collectes transparentes : voyez qui collecte, ce qui entre, où part l'argent et la preuve qu'il a servi à la cause."
+    />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Space+Mono:wght@400;700&display=swap"
+    />
+    <!-- brand wordmark font (not on Google Fonts), used by the DELOS CASH logo -->
+    <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/nasalization" />
+    <title>DELOS CASH</title>
+    <script>
+    // theme before the first paint (web/ui/themetoggle.tsx keeps it in sync)
+    try {
+      const t = localStorage.getItem('theme') ||
+        (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      document.documentElement.dataset.theme = t
+    } catch {}
+    </script>
+    <link rel="stylesheet" href="assets/styles/style.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>Vous devez activer JavaScript pour utiliser DELOS CASH.</noscript>
+    <script type="module" src="/app.tsx"></script>
+  </body>
+</html>

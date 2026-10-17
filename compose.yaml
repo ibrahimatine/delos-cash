@@ -1,0 +1,26 @@
+# `docker compose up -d --build`: builds the image and runs the app on
+# http://localhost:3000. The database and the documents live in the
+# `delos-data` volume; a fresh volume starts on the demo data.
+# `docker compose run --rm app pnpm run backup`
+# copies the database and the documents into /app/data/backups.
+# `docker compose down -v` removes the container and the volume.
+services:
+  app:
+    build: .
+    image: delos-cash
+    container_name: delos-cash-app
+    restart: unless-stopped
+    ports:
+      - '3000:8000'
+    environment:
+      # public URL of the app (e-mail links, Bitnob webhooks), else local
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3000}
+    # secrets (BITNOB_*, RESEND_*, MODERATOR_EMAILS, DEMO_ACCESS): .env-prod
+    env_file:
+      - path: .env-prod
+        required: false
+    volumes:
+      - delos-data:/app/data
+
+volumes:
+  delos-data:

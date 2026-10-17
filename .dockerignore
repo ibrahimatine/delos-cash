@@ -1,0 +1,17 @@
+.git
+.claude
+.env
+.env.local
+.env-prod
+.env-dev
+.env-test
+node_modules/
+dist/
+archive/
+files/
+api/seed-files/
+backups/
+*.db
+*.db-shm
+*.db-wal
+*.md
