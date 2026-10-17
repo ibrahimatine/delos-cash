@@ -92,7 +92,7 @@ sql`CREATE TABLE IF NOT EXISTS webhook_event (
 
 // technical journal of the Bitnob calls (CDC A7), never a secret
 sql`CREATE TABLE IF NOT EXISTS provider_call (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id BIGSERIAL PRIMARY KEY,
   at REAL NOT NULL,
   mode TEXT NOT NULL,
   method TEXT NOT NULL,
@@ -116,7 +116,7 @@ sql`CREATE TABLE IF NOT EXISTS email_token (
 
 // journal of the e-mails (api/email.ts), also counted for the hourly limits
 sql`CREATE TABLE IF NOT EXISTS email_log (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id BIGSERIAL PRIMARY KEY,
   at REAL NOT NULL,
   kind TEXT NOT NULL,
   recipient TEXT NOT NULL,

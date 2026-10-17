@@ -44,6 +44,9 @@ export const meId = signal<string | null>(cached?.me ?? null)
 export const bitnobMode = signal<'mock' | 'sandbox'>(
   (cached?.mode as 'mock' | 'sandbox') ?? 'mock',
 )
+export const persistenceMode = signal<'sqlite' | 'postgres'>(
+  (cached?.persistence as 'sqlite' | 'postgres') ?? 'sqlite',
+)
 export const demoAvailable = signal(cached?.demo ?? true)
 /** the data shown comes from the server (or its cached copy) */
 export const ready = signal(!!cached)
@@ -56,6 +59,7 @@ export const apply = (snapshot: Snapshot) => {
   db.value = snapshot.db
   meId.value = snapshot.me
   bitnobMode.value = snapshot.mode as 'mock' | 'sandbox'
+  persistenceMode.value = snapshot.persistence === 'postgres' ? 'postgres' : 'sqlite'
   demoAvailable.value = snapshot.demo
   syncedAt.value = snapshot.at
   ready.value = true
@@ -76,6 +80,19 @@ export const refresh = () =>
 
 let timer: ReturnType<typeof setTimeout> = 0 as unknown as ReturnType<typeof setTimeout>
 const connect = () => {
+  refresh().finally(() => {
+    if (persistenceMode.value === 'postgres') {
+      live.value = true
+      window.setInterval(() => {
+        refresh().then(() => live.value = true).catch(() => live.value = false)
+      }, 2500)
+      return
+    }
+    connectEvents()
+  })
+}
+
+const connectEvents = () => {
   const source = new EventSource('api/events')
   source.addEventListener('ack', () => live.value = true)
   source.addEventListener('open', () => {
@@ -90,7 +107,6 @@ const connect = () => {
 }
 
 if (typeof EventSource !== 'undefined') {
-  refresh()
   connect()
 }
 

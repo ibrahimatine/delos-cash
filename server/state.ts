@@ -63,10 +63,10 @@ const loadDb = (): Db | undefined => {
       parse<Fund>(sql<DocRow, undefined>`SELECT doc FROM fund`.all()),
     ),
     contributions: parse<Contribution>(
-      sql<DocRow, undefined>`SELECT doc FROM contribution ORDER BY rowid`.all(),
+      sql<DocRow, undefined>`SELECT doc FROM contribution ORDER BY id`.all(),
     ),
     expenses: parse<Expense>(
-      sql<DocRow, undefined>`SELECT doc FROM expense ORDER BY rowid`.all(),
+      sql<DocRow, undefined>`SELECT doc FROM expense ORDER BY id`.all(),
     ),
     ledger,
   }
@@ -240,6 +240,15 @@ if (loaded) {
   reseed()
 }
 
+/** Reloads the durable snapshot at the start of a serverless invocation. */
+export const refreshState = () => {
+  const loaded = loadDb()
+  if (!loaded) return state.db
+  trackLoaded(loaded)
+  state.db = loaded
+  return loaded
+}
+
 // --- real-time (CDC §11.1): an event only says what changed ---------------
 
 export type ServerEvent = { type: string; fundId?: string; at: number }
@@ -262,9 +271,21 @@ export const mutate = <T>(
   run: (draft: Db) => T,
   event?: { type: string; fundId?: string },
 ): T => {
-  const draft = structuredClone(state.db)
-  const result = run(draft)
-  db.transaction(() => persist(draft))()
+  let draft = state.db
+  let result!: T
+  try {
+    db.transaction(() => {
+      const latest = loadDb()
+      if (latest) trackLoaded(latest)
+      draft = structuredClone(latest ?? state.db)
+      result = run(draft)
+      persist(draft)
+    })()
+  } catch (error) {
+    const latest = loadDb()
+    if (latest) trackLoaded(latest)
+    throw error
+  }
   state.db = draft
   if (event) emit(event.type, event.fundId)
   return result

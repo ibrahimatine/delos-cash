@@ -3,22 +3,26 @@
   "private": true,
   "packageManager": "pnpm@11.25.0",
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "node --env-file-if-exists=.env-dev --env-file-if-exists=.env --import tsx task-dev.ts",
     "build": "node --env-file-if-exists=.env-dev --env-file-if-exists=.env --import tsx task-prod.ts",
     "start": "node --env-file-if-exists=.env-prod --import tsx prod-server.ts",
-    "test": "node --env-file-if-exists=.env-test --import tsx --test api/*.test.js web/lib/*.test.js",
+    "test": "node --env-file-if-exists=.env-test --import tsx --test server/*.test.js web/lib/*.test.js",
     "check": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "fmt": "prettier --write \"{api,web,migrations}/**/*.{ts,tsx,js}\" *.ts",
+    "fmt": "prettier --write \"{api,server,web}/**/*.{ts,tsx,js}\" *.ts",
     "icons": "node --import tsx task-icons.ts",
     "seed-files": "node --import tsx task-seed-files.ts",
     "backup": "node --env-file-if-exists=.env-dev --env-file-if-exists=.env --import tsx task-backup.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.0",
+    "@neondatabase/serverless": "^1.2.0",
     "@resvg/resvg-js": "2.6.2",
+    "@vercel/blob": "^2.8.2",
     "better-sqlite3": "^12.2.0",
     "hono": "^4.9.0",
     "qrcode-generator": "^1.4.4",

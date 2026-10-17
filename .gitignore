@@ -33,4 +33,4 @@ backups/
 
 # files of the demo documents: generated (pnpm seed-files),
 # only their manifest web/lib/seed-files.ts is committed
-api/seed-files/
+server/seed-files/

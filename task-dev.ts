@@ -4,7 +4,7 @@ import { createServer } from 'vite'
 
 process.env.APP_ENV ??= 'dev'
 execFileSync(process.execPath, ['--import', 'tsx', 'task-seed-files.ts', '--if-missing'], { stdio: 'inherit' })
-const { default: api } = await import('./api/server.ts')
+const { default: api } = await import('./server/server.ts')
 
 const apiServer = serve({
   port: 8001,

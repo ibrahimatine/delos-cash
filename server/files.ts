@@ -7,6 +7,7 @@
 //   (identity scans, private receipts or quotes) for the people concerned
 //   and the moderators only. Unknown and forbidden answer the same 404.
 import './schema.ts'
+import { get as getBlob, put as putBlob } from '@vercel/blob'
 import { mkdirSync, mkdtempSync } from 'node:fs'
 import { readFile, rename, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -15,7 +16,7 @@ import { getCookies } from './lib/http.ts'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ENV } from './lib/env.ts'
-import { APP_ENV, DATABASE_PATH } from './lib/env.ts'
+import { APP_ENV, DATABASE_PATH, DATABASE_URL } from './lib/env.ts'
 import { log } from './lib/log.ts'
 import { state } from './state.ts'
 import { personOf, SESSION_COOKIE } from './session.ts'
@@ -31,7 +32,7 @@ export const UPLOADS_PER_HOUR = 60
 /** next to the database (the Docker volume), a temporary folder in tests */
 export const FILES_DIR = ENV(
   'FILES_DIR',
-  DATABASE_PATH === ':memory:' || APP_ENV === 'test'
+  DATABASE_URL || DATABASE_PATH === ':memory:' || APP_ENV === 'test'
     ? mkdtempSync(join(tmpdir(), 'delos-files-'))
     : join(dirname(DATABASE_PATH), 'files'),
 )
@@ -77,7 +78,12 @@ const uploadsSince =
 export const fileInfo = (sha256: string) => {
   if (!/^[0-9a-f]{64}$/.test(sha256)) return undefined
   const row = rowOf({ sha256 })
-  if (row) return { ...row, path: join(FILES_DIR, sha256) }
+  if (row) return {
+    ...row,
+    path: DATABASE_URL
+      ? `delos/files/${sha256}`
+      : join(FILES_DIR, sha256),
+  }
   const seed = seedByHash.get(sha256)
   if (seed) {
     return {
@@ -124,12 +130,21 @@ export const storeFile = async (
   }
   const sha256 = Buffer.from(await crypto.subtle.digest('SHA-256', bytes)).toString('hex')
   if (!fileInfo(sha256)) {
-    // written under a temporary name, then renamed: never half a file
-    const path = join(FILES_DIR, sha256)
-    await writeFile(`${path}.part`, bytes)
-    await rename(`${path}.part`, path)
-    sql`INSERT OR IGNORE INTO file (sha256, type, size, uploadedBy, uploadedAt)
-      VALUES (:sha256, :type, :size, :personId, :at)`.run({
+    if (DATABASE_URL) {
+      await putBlob(`delos/files/${sha256}`, Buffer.from(bytes), {
+        access: 'private',
+        allowOverwrite: true,
+        contentType: type,
+      })
+    } else {
+      // written under a temporary name, then renamed: never half a file
+      const path = join(FILES_DIR, sha256)
+      await writeFile(`${path}.part`, bytes)
+      await rename(`${path}.part`, path)
+    }
+    sql`INSERT INTO file (sha256, type, size, uploadedBy, uploadedAt)
+      VALUES (:sha256, :type, :size, :personId, :at)
+      ON CONFLICT (sha256) DO NOTHING`.run({
       sha256,
       type,
       size: bytes.length,
@@ -260,7 +275,14 @@ const download = async (req: Request, url: URL, sha256: string) => {
   if (!info || !access) {
     return json(404, { message: 'Document introuvable.' })
   }
-  const bytes = await readFile(info.path).catch(() => undefined)
+  const bytes = await (info.path.startsWith('delos/files/')
+    ? getBlob(info.path, { access: 'private' }).then(async (blob) =>
+      blob?.statusCode === 200
+        ? new Uint8Array(await new Response(blob.stream).arrayBuffer())
+        : undefined
+    )
+    : readFile(info.path).then((value) => new Uint8Array(value))
+  ).catch(() => undefined)
   if (!bytes) {
     log.error('file-missing', { sha256 })
     return json(404, { message: 'Document introuvable.' })

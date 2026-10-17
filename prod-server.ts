@@ -2,10 +2,10 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { readFile } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
-import api from './api/server.ts'
-import { scheduleBackups } from './api/backup.ts'
-import { BASE_URL, PORT } from './api/lib/env.ts'
-import { withPreview } from './api/og.ts'
+import api from './server/server.ts'
+import { scheduleBackups } from './server/backup.ts'
+import { BASE_URL, PORT } from './server/lib/env.ts'
+import { withPreview } from './server/og.ts'
 
 const html = (await readFile('dist/index.html', 'utf8')).replace(
   '<base href="/" />',

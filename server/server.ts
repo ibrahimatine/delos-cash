@@ -1,10 +1,12 @@
 import { log } from './lib/log.ts'
-import { APP_ENV, BITNOB_MODE } from './lib/env.ts'
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { APP_ENV, BITNOB_MODE, CRON_SECRET, DATABASE_URL } from './lib/env.ts'
 import { routeHandler } from './routes.ts'
-import { listeners, type ServerEvent } from './state.ts'
-import { receiveWebhook, startReconciliation } from './payments.ts'
+import { listeners, refreshState, type ServerEvent } from './state.ts'
+import { receiveWebhook, reconcileAll, startReconciliation } from './payments.ts'
 import { handleFiles } from './files.ts'
-import { handleOgImage } from './og.ts'
+import { handleOgImage, withPreview } from './og.ts'
 import { grantModerators } from './session.ts'
 
 const encoder = new TextEncoder()
@@ -42,9 +44,31 @@ const events = () => {
 }
 
 export default {
-  fetch(req: Request) {
+  async fetch(req: Request) {
     const url = new URL(req.url)
     if (url.pathname === '/api/events' && req.method === 'GET') return events()
+    if (url.pathname === '/api/cron/reconcile' && req.method === 'GET') {
+      if (!CRON_SECRET || req.headers.get('authorization') !== `Bearer ${CRON_SECRET}`) {
+        return new Response('Unauthorized', { status: 401 })
+      }
+      if (DATABASE_URL) refreshState()
+      await reconcileAll()
+      return Response.json({ ok: true })
+    }
+    if (DATABASE_URL) refreshState()
+    if (url.pathname === '/api/share' && req.method === 'GET') {
+      const pathname = url.searchParams.get('path') || '/'
+      url.searchParams.delete('path')
+      const page = new URL(pathname, url)
+      page.search = url.search
+      const html = await readFile(join(process.cwd(), 'dist/index.html'), 'utf8')
+      return new Response(withPreview(html, page), {
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store',
+        },
+      })
+    }
     // the raw body is needed to check the signature: before the router
     if (url.pathname === '/api/webhooks/bitnob' && req.method === 'POST') {
       return receiveWebhook(req)
@@ -65,6 +89,6 @@ export default {
 grantModerators()
 
 // the reconciliation job is mandatory: no failure webhook exists (CDC §7.9)
-if (APP_ENV !== 'test') startReconciliation()
+if (APP_ENV !== 'test' && !DATABASE_URL) startReconciliation()
 
 log.info('server-start', { bitnob: BITNOB_MODE })

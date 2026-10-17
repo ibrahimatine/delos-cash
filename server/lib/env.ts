@@ -1,19 +1,33 @@
 export const ENV = (key: string, fallback = '') => process.env[key] ?? fallback
 export const PROD = ENV
-export const APP_ENV = ENV('APP_ENV', 'dev')
+export const APP_ENV = ENV('APP_ENV', ENV('VERCEL') ? 'prod' : 'dev')
 export const BASE_URL = ENV('BASE_URL', '/')
 
 export const DATABASE_PATH = ENV(
   'DATABASE_PATH',
   APP_ENV === 'test' ? ':memory:' : 'delos.db',
 )
+/** When set, SQL is sent to Neon PostgreSQL through the serverless worker. */
+export const DATABASE_URL = ENV('DATABASE_URL')
+export const BLOB_READ_WRITE_TOKEN = ENV('BLOB_READ_WRITE_TOKEN')
+export const CRON_SECRET = ENV('CRON_SECRET')
+if (APP_ENV === 'prod' && DATABASE_URL && !BLOB_READ_WRITE_TOKEN) {
+  throw Error('BLOB_READ_WRITE_TOKEN is required when DATABASE_URL is set')
+}
+if (APP_ENV === 'prod' && DATABASE_URL && !CRON_SECRET) {
+  throw Error('CRON_SECRET is required when DATABASE_URL is set')
+}
 
 export const PORT = Number(ENV('PORT', '8000'))
 export const BITNOB_MOCK_PACE_MS = ENV('BITNOB_MOCK_PACE_MS', '1200')
 
 /** public HTTPS URL of the server: the Bitnob webhooks are sent there */
 const LOCAL_PUBLIC_URL = `http://localhost:${PORT}`
-export const PUBLIC_URL = ENV('PUBLIC_URL').trim() || LOCAL_PUBLIC_URL
+const VERCEL_PUBLIC_URL = ENV('VERCEL_PROJECT_PRODUCTION_URL') || ENV('VERCEL_URL')
+  ? `https://${ENV('VERCEL_PROJECT_PRODUCTION_URL') || ENV('VERCEL_URL')}`
+  : ''
+export const PUBLIC_URL =
+  ENV('PUBLIC_URL').trim() || VERCEL_PUBLIC_URL || LOCAL_PUBLIC_URL
 
 /**
  * CDC §8.3: `sandbox` calls the real Bitnob sandbox (fictitious money),

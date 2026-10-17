@@ -116,6 +116,31 @@ docker compose down
 `docker compose down -v` supprime aussi le volume et donc la base, les documents
 et les sauvegardes.
 
+## Déployer sur Vercel
+
+Le dépôt est configuré pour une interface Vite et une fonction Node.js Vercel.
+En production, l’API utilise Neon PostgreSQL (`DATABASE_URL`) et un magasin
+Vercel Blob privé (`BLOB_READ_WRITE_TOKEN`) pour les justificatifs. SQLite et
+les fichiers locaux restent le mode par défaut pour le développement et Docker.
+
+Créez une base PostgreSQL Neon et un magasin Blob **privé**, puis ajoutez ces
+variables dans les paramètres Vercel :
+
+- `DATABASE_URL`
+- `BLOB_READ_WRITE_TOKEN`
+- `CRON_SECRET` (secret aléatoire d’au moins 16 caractères)
+- `BITNOB_MODE=mock` pour la démo, ou `sandbox` avec les clés Bitnob sandbox
+- `DEMO_ACCESS=1` uniquement pour une démonstration publique
+
+La réconciliation des factures et versements est planifiée toutes les minutes
+par Vercel Cron. Le forfait Hobby limite les tâches cron à une exécution par
+jour ; cette fréquence exige donc un forfait Pro. Le webhook Bitnob reste
+disponible sur `/api/webhooks/bitnob`.
+
+Les pièces privées sont conservées dans Blob et renvoyées seulement après les
+contrôles d’accès DELOS. Ne configurez pas le magasin Blob en mode public. Les
+secrets doivent être saisis dans Vercel, jamais commités dans Git.
+
 ## Parcours de démonstration
 
 La démo guidée présente l’annuaire, une contribution Lightning, une dépense
@@ -137,12 +162,13 @@ du panneau « Démo guidée » pour avancer étape par étape.
 ## Repères dans le code
 
 ```text
-api/                 API Hono, règles serveur, SQLite, paiements et fichiers
+api/                 Adaptateur Vercel (fonction catch-all)
+server/              API Hono, règles serveur, SQLite/PostgreSQL, paiements et fichiers
 web/app.tsx          cadre React et routes chargées à la demande
 web/pages/           pages de l’application
 web/ui/              composants réutilisables
 web/lib/             état client, règles partagées, appels API et données démo
-migrations/          évolutions de la base SQLite
+server/migrations/   évolutions de la base
 task-dev.ts          serveurs Vite et API pour le développement
 task-prod.ts         build de production
 prod-server.ts       serveur HTTP de production

@@ -9,7 +9,7 @@ node_modules/
 dist/
 archive/
 files/
-api/seed-files/
+server/seed-files/
 backups/
 *.db
 *.db-shm

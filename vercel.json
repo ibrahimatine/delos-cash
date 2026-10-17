@@ -1,0 +1,33 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 60,
+      "includeFiles": "{server/**,dist/index.html}"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/association",
+      "has": [{ "type": "query", "key": "id" }],
+      "destination": "/api?__api_path=/share&path=/association"
+    },
+    {
+      "source": "/collecte",
+      "has": [{ "type": "query", "key": "id" }],
+      "destination": "/api?__api_path=/share&path=/collecte"
+    },
+    {
+      "source": "/depense",
+      "has": [{ "type": "query", "key": "id" }],
+      "destination": "/api?__api_path=/share&path=/depense"
+    },
+    { "source": "/api/:path*", "destination": "/api?__api_path=/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    { "path": "/api/cron/reconcile", "schedule": "* * * * *" }
+  ]
+}

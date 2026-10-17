@@ -7,7 +7,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync, statSync } f
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { ENV } from './lib/env.ts'
-import { APP_ENV, DATABASE_PATH } from './lib/env.ts'
+import { APP_ENV, DATABASE_PATH, DATABASE_URL } from './lib/env.ts'
 import { FILES_DIR } from './files.ts'
 import { log } from './lib/log.ts'
 
@@ -25,6 +25,9 @@ const stamp = (date: Date) =>
   date.toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '-')
 
 export const backup = async () => {
+  if (DATABASE_URL) {
+    throw Error('Database backups must be configured with the PostgreSQL provider.')
+  }
   mkdirSync(join(BACKUP_DIR, 'files'), { recursive: true })
   const target = join(BACKUP_DIR, `delos-${stamp(new Date())}.db`)
   rmSync(target, { force: true })

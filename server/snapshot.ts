@@ -3,7 +3,7 @@
 // full phone number, a password, an identity document of someone else or a
 // contributor behind « Anonyme ».
 import type { Db, Organization, Person } from '../web/lib/types.ts'
-import { BITNOB_MODE, DEMO_ACCESS } from './lib/env.ts'
+import { BITNOB_MODE, DATABASE_URL, DEMO_ACCESS } from './lib/env.ts'
 
 const publicPerson = (p: Person): Person => ({
   id: p.id,
@@ -49,6 +49,7 @@ export const snapshot = (d: Db, viewer?: Person) => {
     db: { ...d, persons, organizations, contributions },
     me: viewer?.id ?? null,
     mode: BITNOB_MODE,
+    persistence: DATABASE_URL ? 'postgres' : 'sqlite',
     demo: DEMO_ACCESS,
     at: Date.now(),
   }

@@ -34,7 +34,7 @@ pnpm fmt
 pnpm build            # Vite production build
 pnpm start            # production server (.env-prod)
 pnpm icons            # PNG icons of the PWA from web/public/icons/*.svg
-pnpm seed-files        # demo documents (api/seed-files/, web/lib/seed-files.ts)
+pnpm seed-files        # demo documents (server/seed-files/, web/lib/seed-files.ts)
 pnpm backup            # copy of the database and the documents
 docker compose up -d --build   # the production image on :3000 (Dockerfile)
 ```
@@ -47,40 +47,40 @@ to start again from the seed, or use « Réinitialiser la démo ».
 
 ## Architecture
 
-- **Server** (`api/`): Hono handles `routeHandler` from `routes.ts`
+- **Server** (`server/`): Hono handles `routeHandler` from `routes.ts`
   (every endpoint is a `route({ authorize, fn, input, output })` keyed
   `'METHOD/api/path'`, validated by local schemas), plus raw handlers:
   `GET /api/events` (SSE) and `POST /api/webhooks/bitnob` (raw body for the
   signature). Permissions are always checked on the server.
-- **State** (`api/state.ts`): the whole database is held in memory, loaded
+- **State** (`server/state.ts`): the whole database is held in memory, loaded
   from SQLite at boot; `mutate(fn)` runs a domain function on a copy, writes
   what changed in one transaction, then emits an SSE event. Aggregates are
   JSON documents (`person`, `organization`, `fund`, `contribution`,
   `expense`); the register is the append-only table `ledger_event`; full
   Mobile Money numbers live apart in `private_number`. Tables are created in
-  `api/schema.ts`; `migrations/NNN-migration.js` only alter an existing base.
-  `api/lib/db.ts` adapts better-sqlite3 to the existing tagged SQL calls.
+  `server/schema.ts`; `server/migrations/NNN-migration.js` only alter an existing base.
+  `server/lib/db.ts` adapts SQLite locally and Neon PostgreSQL on Vercel to the tagged SQL calls.
 - **Shared domain** (`web/lib/`, no DOM): `types.ts`, `rules.ts` (balances,
   statuses, rights), `domain.ts` (mutations and business rules RG-xx, throw
   `DomainError` → 400), `ledger.ts` (hash chain), `seed.ts` (DESIGN §3).
   The server runs them; the client only reads `rules.ts` through
   `web/lib/store.ts`.
-- **Bitnob** (`api/bitnob.ts`): one interface, two implementations chosen by
+- **Bitnob** (`server/bitnob.ts`): one interface, two implementations chosen by
   `BITNOB_MODE`: `sandbox` (signed HMAC-SHA256 requests, decimal strings read
   without floats) and `mock` (same state machine, paced for the demo by
   `BITNOB_MOCK_PACE_MS`). Every call goes to the `provider_call` journal.
-  `api/payments.ts` orchestrates invoices, quotes and payouts; a success is
+  `server/payments.ts` orchestrates invoices, quotes and payouts; a success is
   only declared after reading Bitnob (RG-19); webhooks are verified
   (HMAC-SHA512), deduplicated by `event_id`, and only trigger a reading; the
   reconciliation job reads every pending operation.
-- **E-mails** (`api/email.ts`): Resend through the server-side `fetch` API.
+- **E-mails** (`server/email.ts`): Resend through the server-side `fetch` API.
   Off without `RESEND_API_KEY`: the demo then returns the link token
   (`demoToken`) to open it from the screen. A signup creates nothing until
   the e-mailed link is opened (`email_token` holds only its SHA-256);
   invitations are sent in the background with `notify()` (tests await
-  `flushEmails()`, Resend is mocked by `api/lib/email-mock.ts`). Every send
+  `flushEmails()`, Resend is mocked by `server/lib/email-mock.ts`). Every send
   goes to `email_log`, which also enforces the hourly limits.
-- **Files** (`api/files.ts`): `POST /api/files` (raw body, signed in, PDF,
+- **Files** (`server/files.ts`): `POST /api/files` (raw body, signed in, PDF,
   JPEG or PNG read from the bytes, 5 Mo) stores a file in `FILES_DIR` under
   its SHA-256; `GET /api/files/<sha256>` serves it if a public document
   points at it, or to the people concerned (members, managers, the person
@@ -91,11 +91,11 @@ to start again from the seed, or use « Réinitialiser la démo ».
   `DropZone` (`web/ui/docs.tsx`) hashes then uploads at once.
 - **Accounts**: `MODERATOR_EMAILS` makes confirmed accounts moderators; 5
   failed sign-ins lock an address for 15 minutes (`login_failure`).
-- **Backups** (`api/backup.ts`): `VACUUM INTO` plus the new files, daily in
+- **Backups** (`server/backup.ts`): `VACUUM INTO` plus the new files, daily in
   production (`prod-server.ts`), 14 copies kept.
 - **Client** (`web/`): React. `web/lib/reactive.ts` provides the small signal
   store used by existing screens; `web/lib/store.ts` holds
-  the snapshot of `GET /api/state` (filtered by `api/snapshot.ts`: no private
+  the snapshot of `GET /api/state` (filtered by `server/snapshot.ts`: no private
   data of others), reloaded on every SSE event and cached in `localStorage`
   for offline reading. `web/lib/actions.ts` calls the Fetch client and refuses
   financial actions offline.
@@ -132,10 +132,10 @@ to start again from the seed, or use « Réinitialiser la démo ».
   (`web/ui/org-overview.tsx`) shows all its collectes together: month by
   month chart, the map association → activities, one feed of every movement
   with its filters (`?q=&sens=&activite=&periode=`).
-- **Sharing** (`web/ui/share.tsx`, `api/og.ts`): « Partager » for everyone on
+- **Sharing** (`web/ui/share.tsx`, `server/og.ts`): « Partager » for everyone on
   collecte, association and spending pages (`?dialog=partager`); the server
   writes Open Graph tags into index.html and draws the preview image
-  (`/api/og/collecte/<id>.png`, resvg, fonts in `api/og-fonts/`).
+  (`/api/og/collecte/<id>.png`, resvg, fonts in `server/og-fonts/`).
 - **PWA**: `web/public/` (manifest, `sw.js` versioned by build, icons). The
   service worker is only registered by the production build and never
   touches `/api/`.

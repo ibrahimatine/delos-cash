@@ -13,5 +13,5 @@
     "baseUrl": ".",
     "paths": { "@signals": ["web/lib/reactive.ts"] }
   },
-  "include": ["api/**/*.ts", "web/**/*.ts", "web/**/*.tsx", "*.ts"]
+  "include": ["api/**/*.ts", "server/**/*.ts", "web/**/*.ts", "web/**/*.tsx", "*.ts"]
 }

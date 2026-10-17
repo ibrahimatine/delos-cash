@@ -368,9 +368,10 @@ export const receiveWebhook = async (req: Request) => {
   const reference = String(
     payload.data?.reference ?? payload.data?.quote_id ?? payload.data?.id ?? '',
   )
-  const inserted = sql`INSERT OR IGNORE INTO webhook_event
+  const inserted = sql`INSERT INTO webhook_event
     (eventId, event, reference, receivedAt, body)
-    VALUES (:eventId, :event, :reference, :at, :body)`.run({
+    VALUES (:eventId, :event, :reference, :at, :body)
+    ON CONFLICT (eventId) DO NOTHING`.run({
     eventId,
     event,
     reference,
