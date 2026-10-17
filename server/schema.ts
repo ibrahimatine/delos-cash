@@ -1,12 +1,10 @@
 import { migrationsDirectory, runMigrations, sql } from './lib/db.ts'
 
-// Migrations run first: they evolve an existing database (a fresh one is
-// already up to date). Then the tables are created if missing (CDC §10):
+// Tables are created before migrations so a fresh database also has the base
+// tables that additive migrations extend (CDC §10):
 // aggregates as JSON documents with their keys in columns, the register as
 // a real append-only table, one row per event, so a line edited "in the
 // database" breaks the hash chain.
-await runMigrations(migrationsDirectory())
-
 sql`CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -142,3 +140,5 @@ sql`CREATE TABLE IF NOT EXISTS login_failure (
 )`.run()
 sql`CREATE INDEX IF NOT EXISTS login_failure_email ON login_failure(email, at)`
   .run()
+
+await runMigrations(migrationsDirectory())

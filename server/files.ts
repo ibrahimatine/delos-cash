@@ -2,12 +2,14 @@
 // A file is stored once, named by its SHA-256: the hash shown next to a
 // document is the name of the file anybody can download and check.
 // - POST /api/files: a signed-in person sends one file (PDF, JPEG or PNG,
-//   5 Mo), its type is read from its first bytes, not from the browser.
+//   5 Mo). In cloud mode, Blob receives the bytes directly and the server
+//   reads them back before accepting the SHA-256 and detected media type.
 // - GET /api/files/<sha256>: public documents for everybody; private ones
 //   (identity scans, private receipts or quotes) for the people concerned
 //   and the moderators only. Unknown and forbidden answer the same 404.
 import './schema.ts'
 import { get as getBlob, put as putBlob } from '@vercel/blob'
+import { handleUpload } from '@vercel/blob/client'
 import { mkdirSync, mkdtempSync } from 'node:fs'
 import { readFile, rename, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -28,6 +30,9 @@ import type { Db, Doc, FileRef, Person } from '../web/lib/types.ts'
 export const MAX_FILE_SIZE = 5 * 1024 * 1024
 /** uploads per person and per hour */
 export const UPLOADS_PER_HOUR = 60
+const validBlobPath = (path: string, sha256: string) =>
+  /^[0-9a-f]{64}$/.test(sha256) &&
+  new RegExp(`^delos/uploads/[^/]+/${sha256}/[0-9a-f-]{36}$`).test(path)
 
 /** next to the database (the Docker volume), a temporary folder in tests */
 export const FILES_DIR = ENV(
@@ -62,10 +67,11 @@ type FileRow = {
   type: string
   size: number
   uploadedBy: string
+  blobPath: string | null
 }
 
 const rowOf = sql<FileRow, { sha256: string }>`
-  SELECT sha256, type, size, uploadedBy FROM file WHERE sha256 = :sha256
+  SELECT sha256, type, size, uploadedBy, blobPath FROM file WHERE sha256 = :sha256
 `.get
 
 const uploadsSince =
@@ -80,9 +86,9 @@ export const fileInfo = (sha256: string) => {
   const row = rowOf({ sha256 })
   if (row) return {
     ...row,
-    path: DATABASE_URL
+    path: row.blobPath || (DATABASE_URL
       ? `delos/files/${sha256}`
-      : join(FILES_DIR, sha256),
+      : join(FILES_DIR, sha256)),
   }
   const seed = seedByHash.get(sha256)
   if (seed) {
@@ -130,8 +136,9 @@ export const storeFile = async (
   }
   const sha256 = Buffer.from(await crypto.subtle.digest('SHA-256', bytes)).toString('hex')
   if (!fileInfo(sha256)) {
+    const blobPath = `delos/uploads/${personId}/${sha256}`
     if (DATABASE_URL) {
-      await putBlob(`delos/files/${sha256}`, Buffer.from(bytes), {
+      await putBlob(blobPath, Buffer.from(bytes), {
         access: 'private',
         allowOverwrite: true,
         contentType: type,
@@ -142,14 +149,15 @@ export const storeFile = async (
       await writeFile(`${path}.part`, bytes)
       await rename(`${path}.part`, path)
     }
-    sql`INSERT INTO file (sha256, type, size, uploadedBy, uploadedAt)
-      VALUES (:sha256, :type, :size, :personId, :at)
+    sql`INSERT INTO file (sha256, type, size, uploadedBy, uploadedAt, blobPath)
+      VALUES (:sha256, :type, :size, :personId, :at, :blobPath)
       ON CONFLICT (sha256) DO NOTHING`.run({
       sha256,
       type,
       size: bytes.length,
       personId,
       at: Date.now(),
+      blobPath: DATABASE_URL ? blobPath : null,
     })
   }
   return { sha256, size: bytes.length, type }
@@ -267,6 +275,94 @@ const upload = async (req: Request, url: URL) => {
   }
 }
 
+/** Issues a scoped Blob token so 5 Mo files bypass Vercel's 4.5 MB body cap. */
+const uploadToken = async (req: Request, url: URL) => {
+  if (!DATABASE_URL) return undefined
+  if (req.headers.has('origin') && !sameOrigin(req, url)) {
+    return json(403, { message: 'Origine refusée.' })
+  }
+  try {
+    const body = await req.json()
+    const response = await handleUpload({
+      request: req,
+      body,
+      onBeforeGenerateToken: async (pathname, clientPayload) => {
+        const viewer = personOf(getCookies(req.headers)[SESSION_COOKIE])
+        if (!viewer) throw Error('Connexion requise.')
+        const sha256 = clientPayload ?? ''
+        if (!validBlobPath(pathname, sha256) ||
+          !pathname.startsWith(`delos/uploads/${viewer.id}/`)) {
+          throw Error('Chemin ou empreinte de fichier invalide.')
+        }
+        return {
+          allowedContentTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+          maximumSizeInBytes: MAX_FILE_SIZE,
+        }
+      },
+      // The browser confirms completion in a separate authenticated request,
+      // which verifies the actual bytes before recording their hash and type.
+      onUploadCompleted: async () => {},
+    })
+    return Response.json(response, { headers: { 'Cache-Control': 'no-store' } })
+  } catch (error) {
+    return json(400, {
+      message: error instanceof Error ? error.message : 'Jeton de dépôt refusé.',
+    })
+  }
+}
+
+/** Reads a completed private upload and verifies it before adding DB metadata. */
+const completeUpload = async (req: Request, url: URL) => {
+  if (!DATABASE_URL) return undefined
+  if (!sameOrigin(req, url)) return json(403, { message: 'Origine refusée.' })
+  const viewer = personOf(getCookies(req.headers)[SESSION_COOKIE])
+  if (!viewer) return json(401, { message: 'Connexion requise.' })
+  try {
+    const body = await req.json() as { sha256?: string; blobPath?: string }
+    const sha256 = body.sha256 ?? ''
+    const blobPath = body.blobPath ?? ''
+    if (!validBlobPath(blobPath, sha256) ||
+      !blobPath.startsWith(`delos/uploads/${viewer.id}/`)) {
+      return json(400, { message: 'Empreinte de fichier invalide.' })
+    }
+    const blob = await getBlob(blobPath, { access: 'private' })
+    if (!blob || blob.statusCode !== 200) {
+      return json(404, { message: 'Fichier non reçu.' })
+    }
+    const bytes = new Uint8Array(await new Response(blob.stream).arrayBuffer())
+    if (!bytes.length || bytes.length > MAX_FILE_SIZE) {
+      return json(400, { message: 'Fichier refusé : 5 Mo maximum.' })
+    }
+    const type = sniff(bytes)
+    if (!type) return json(400, { message: 'Fichier refusé : PDF, JPEG ou PNG.' })
+    const actualHash = Buffer.from(await crypto.subtle.digest('SHA-256', bytes))
+      .toString('hex')
+    if (actualHash !== sha256) {
+      return json(400, { message: 'Empreinte incorrecte : renvoyez le document.' })
+    }
+    const sent = uploadsSince({ personId: viewer.id, since: Date.now() - 3_600_000 })
+    if ((sent?.count ?? 0) >= UPLOADS_PER_HOUR && !fileInfo(sha256)) {
+      return json(429, { message: 'Trop de fichiers envoyés : réessayez dans une heure.' })
+    }
+    sql`INSERT INTO file (sha256, type, size, uploadedBy, uploadedAt, blobPath)
+      VALUES (:sha256, :type, :size, :personId, :at, :blobPath)
+      ON CONFLICT (sha256) DO NOTHING`.run({
+      sha256,
+      type,
+      size: bytes.length,
+      personId: viewer.id,
+      at: Date.now(),
+      blobPath,
+    })
+    return json(200, { sha256, type, size: bytes.length })
+  } catch (error) {
+    log.error('file-upload-completion-failed', {
+      message: error instanceof Error ? error.message : String(error),
+    })
+    return json(400, { message: 'Validation du fichier impossible.' })
+  }
+}
+
 const download = async (req: Request, url: URL, sha256: string) => {
   const info = fileInfo(sha256)
   const viewer = personOf(getCookies(req.headers)[SESSION_COOKIE])
@@ -308,6 +404,18 @@ const download = async (req: Request, url: URL, sha256: string) => {
 
 /** POST /api/files and GET /api/files/<sha256>, before the router */
 export const handleFiles = (req: Request, url: URL) => {
+  if (url.pathname === '/api/files/upload-mode' && req.method === 'GET') {
+    if (!DATABASE_URL) return json(200, { directBlobUpload: false })
+    const viewer = personOf(getCookies(req.headers)[SESSION_COOKIE])
+    if (!viewer) return json(401, { message: 'Connexion requise.' })
+    return json(200, { directBlobUpload: true, uploadScope: viewer.id })
+  }
+  if (url.pathname === '/api/files/token' && req.method === 'POST') {
+    return uploadToken(req, url)
+  }
+  if (url.pathname === '/api/files/complete' && req.method === 'POST') {
+    return completeUpload(req, url)
+  }
   if (url.pathname === '/api/files' && req.method === 'POST') {
     return upload(req, url)
   }

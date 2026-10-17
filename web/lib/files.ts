@@ -1,5 +1,6 @@
-// Documents sent to the server (api/files.ts): a file is named by its
-// SHA-256, computed in the browser first and checked again by the server.
+// Documents sent to the server and private Blob storage (server/files.ts):
+// the browser computes the SHA-256 first; the server checks it against bytes.
+import { upload as uploadBlob } from '@vercel/blob/client'
 import type { FileRef } from '../lib/types.ts'
 import { online } from '../lib/network.ts'
 
@@ -14,6 +15,49 @@ export const fileUrl = (sha256: string, download = false) =>
 export const uploadFile = async (file: Blob, sha256: string) => {
   if (!online.peek()) {
     throw Error('Connexion requise pour envoyer un document.')
+  }
+  const modeUrl = new URL('api/files/upload-mode', document.baseURI)
+  const modeResponse = await fetch(modeUrl, { credentials: 'same-origin' })
+    .catch(() => {
+      throw Error('Envoi impossible : vérifiez votre connexion.')
+    })
+  const modeBody = await modeResponse.json().catch(() => ({})) as {
+    directBlobUpload?: boolean
+    uploadScope?: string
+    message?: string
+  }
+  if (!modeResponse.ok) {
+    throw Error(modeBody.message ?? 'Envoi du document impossible.')
+  }
+  if (modeBody.directBlobUpload) {
+    if (!modeBody.uploadScope) throw Error('Session de dépôt invalide.')
+    const blobPath = `delos/uploads/${modeBody.uploadScope}/${sha256}/${crypto.randomUUID()}`
+    await uploadBlob(blobPath, file, {
+      access: 'private',
+      handleUploadUrl: new URL('api/files/token', document.baseURI).href,
+      clientPayload: sha256,
+    })
+    const complete = await fetch(
+      new URL('api/files/complete', document.baseURI),
+      {
+        method: 'POST',
+        body: JSON.stringify({ sha256, blobPath }),
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+      },
+    ).catch(() => {
+      throw Error('Envoi impossible : vérifiez votre connexion.')
+    })
+    const body = await complete.json().catch(() => ({})) as
+      & Partial<FileRef>
+      & { message?: string }
+    if (!complete.ok) {
+      throw Error(body.message ?? 'Validation du document impossible.')
+    }
+    if (body.sha256 !== sha256) {
+      throw Error('Le document a été modifié pendant l’envoi : réessayez.')
+    }
+    return body as FileRef
   }
   const res = await fetch(new URL('api/files', document.baseURI), {
     method: 'POST',
