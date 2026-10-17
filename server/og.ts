@@ -5,8 +5,7 @@
 // (1200 × 630 PNG, resvg) from the live figures.
 import { Resvg } from '@resvg/resvg-js'
 import { readFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { BASE_URL, ORIGIN } from './lib/env.ts'
 import { log } from './lib/log.ts'
 import { state } from './state.ts'
@@ -140,7 +139,7 @@ export const withPreview = (html: string, url: URL) => {
 
 /* ---------- the image ---------- */
 
-const fontDir = join(dirname(fileURLToPath(import.meta.url)), 'og-fonts')
+const fontDir = join(process.cwd(), 'server/og-fonts')
 let ready: Promise<Uint8Array[]> | undefined
 const setup = () =>
   ready ??= (async () => {

@@ -1,4 +1,5 @@
 import { build } from 'vite'
+import { build as bundle } from 'esbuild'
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 
@@ -8,6 +9,15 @@ execFileSync(process.execPath, ['--import', 'tsx', 'task-seed-files.ts', '--if-m
 const startedAt = Date.now()
 await build({ configFile: './vite.config.ts' })
 mkdirSync('dist', { recursive: true })
+await bundle({
+  entryPoints: ['server/server.ts'],
+  outfile: 'dist/server.mjs',
+  bundle: true,
+  packages: 'external',
+  platform: 'node',
+  format: 'esm',
+  target: 'node24',
+})
 const swPath = 'dist/sw.js'
 const sw = readFileSync(swPath, 'utf8')
 writeFileSync(swPath, sw.replace('__BUILD__', String(startedAt)))

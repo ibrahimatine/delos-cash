@@ -16,7 +16,6 @@ import { tmpdir } from 'node:os'
 import { sql } from './lib/db.ts'
 import { getCookies } from './lib/http.ts'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { ENV } from './lib/env.ts'
 import { APP_ENV, DATABASE_PATH, DATABASE_URL } from './lib/env.ts'
 import { log } from './lib/log.ts'
@@ -44,7 +43,7 @@ export const FILES_DIR = ENV(
 mkdirSync(FILES_DIR, { recursive: true })
 
 /** the files of the demo documents ship with the code (task-seed-files.ts) */
-const SEED_DIR = join(dirname(fileURLToPath(import.meta.url)), 'seed-files')
+const SEED_DIR = join(process.cwd(), 'server/seed-files')
 const seedByHash = new Map(
   Object.entries(seedFiles).map((
     [name, f],

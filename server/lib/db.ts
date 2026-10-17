@@ -1,8 +1,8 @@
 import Database from 'better-sqlite3'
 import { Worker } from 'node:worker_threads'
 import { readdirSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { DATABASE_PATH, DATABASE_URL } from './env.ts'
 
 type RunResult = { changes: number; lastInsertRowid: number | bigint }
@@ -234,4 +234,4 @@ export async function runMigrations(directory: string) {
 }
 
 export const migrationsDirectory = () =>
-  join(dirname(fileURLToPath(import.meta.url)), '../migrations')
+  join(process.cwd(), 'server/migrations')

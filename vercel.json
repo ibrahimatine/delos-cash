@@ -5,7 +5,7 @@
   "functions": {
     "api/index.ts": {
       "maxDuration": 60,
-      "includeFiles": "{server/**,dist/index.html}"
+      "includeFiles": "{server/**,dist/index.html,dist/server.mjs}"
     }
   },
   "rewrites": [
