@@ -36,8 +36,7 @@ local (`mock`), selon la configuration.
 
 - **GitHub :** [ibrahimatine/delos-cash](https://github.com/ibrahimatine/delos-cash)
 - **Démo en ligne :** [delos-cash-ibrahima-tines-projects.vercel.app](https://delos-cash-ibrahima-tines-projects.vercel.app)
-- **Vidéo de démonstration :** à ajouter
-- **Pitch deck :** à ajouter
+- **Vidéo de démonstration & Pitch deck:** https://drive.google.com/drive/folders/13Y5rwE2uOIj5WxtyErG13SOxosnnZ8ws?usp=drive_link
 - **Captures d’écran :** à ajouter
 
 > **À propos de la démo en ligne :** elle utilise actuellement le mode `mock`,
