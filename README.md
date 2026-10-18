@@ -1,10 +1,49 @@
 # DELOS CASH
 
-DELOS CASH est un annuaire public de collectes transparentes : associations et
-cagnottes montrent qui collecte, combien entre, où l’argent est dépensé et les
-preuves associées. Ce POC a été réalisé pour le hackathon Bitnob et intègre
-l’API Bitnob Sandbox pour tester le parcours de contribution Lightning et les
-opérations de paiement avec des fonds fictifs.
+> **Chaque contribution se voit. Chaque dépense se justifie. Partout dans le monde.**
+
+DELOS CASH est un annuaire public de collectes transparentes, conçu pour que
+les donateurs puissent suivre une cause et contribuer, où qu’ils se trouvent.
+Pour chaque collecte, chacun peut voir qui collecte, les contributions
+enregistrées, les dépenses, leur progression et les justificatifs associés.
+
+## Le projet en bref
+
+### Problème
+
+Les donateurs ne savent pas toujours combien une collecte a réellement reçu,
+comment l’argent a été utilisé ni si les dépenses ont servi la cause annoncée.
+Ce manque de visibilité fragilise la confiance envers les associations et les
+cagnottes. Les frontières et les moyens de paiement disponibles peuvent aussi
+rendre la contribution à une cause internationale difficile.
+
+### Solution
+
+DELOS CASH rassemble les collectes dans un annuaire public et rend traçables
+les contributions, les dépenses et leurs preuves. Le prototype présente un
+parcours de contribution Lightning et de versement Mobile Money, avec
+l’intégration Bitnob testée en Sandbox. Les opérations de la démonstration
+n’utilisent que des fonds fictifs : aucune somme réelle n’est transférée.
+
+### Technologies
+
+React, TypeScript, Vite, Tailwind CSS, Hono, Neon PostgreSQL, Vercel Blob,
+Vercel, GitHub Actions et l’API Bitnob. Le projet utilise SQLite en local et
+peut fonctionner avec l’intégration Bitnob Sandbox ou avec son simulateur
+local (`mock`), selon la configuration.
+
+### Liens et ressources
+
+- **GitHub :** [ibrahimatine/delos-cash](https://github.com/ibrahimatine/delos-cash)
+- **Démo en ligne :** [delos-cash-ibrahima-tines-projects.vercel.app](https://delos-cash-ibrahima-tines-projects.vercel.app)
+- **Vidéo de démonstration :** à ajouter
+- **Pitch deck :** à ajouter
+- **Captures d’écran :** à ajouter
+
+> **À propos de la démo en ligne :** elle utilise actuellement le mode `mock`,
+> un simulateur local. L’intégration et les essais Bitnob Sandbox sont
+> documentés ci-dessous. La présence du site live ne signifie donc pas que ses
+> paiements appellent actuellement l’API Bitnob.
 
 > **Aucun argent réel ne circule.** Les opérations financières sont effectuées
 > soit dans la sandbox Bitnob, soit dans le simulateur local selon le mode
@@ -59,7 +98,7 @@ vérifiant que l’ajout au `PATH` est activé, puis ouvrez un nouveau terminal.
 ### Installation
 
 ```bash
-git clone https://github.com/Mirak29/delos-cash.git
+git clone https://github.com/ibrahimatine/delos-cash.git
 cd delos-cash
 pnpm install
 pnpm dev

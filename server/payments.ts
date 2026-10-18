@@ -56,9 +56,14 @@ export const createContribution = async (
     })
   } catch (err) {
     log.error('invoice-failed', { ref, message: (err as Error).message })
+    const status = (err as ProviderError).status
     throw new ProviderError(
-      'La facture n’a pas pu être créée. Bitnob n’a pas répondu. Aucun paiement n’a été demandé.',
-      (err as ProviderError).status,
+      status === 403
+        ? 'Bitnob a refusé la création de la facture (HTTP 403). Vérifiez que l’adresse IP publique de votre serveur est autorisée dans les paramètres de la clé API Bitnob Sandbox. Aucun paiement n’a été demandé.'
+        : status
+          ? `Bitnob a refusé la création de la facture (HTTP ${status}). Aucun paiement n’a été demandé.`
+          : 'La facture n’a pas pu être créée : Bitnob est injoignable. Aucun paiement n’a été demandé.',
+      status,
     )
   }
   return mutate(
