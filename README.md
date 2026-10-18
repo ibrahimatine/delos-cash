@@ -2,10 +2,35 @@
 
 DELOS CASH est un annuaire public de collectes transparentes : associations et
 cagnottes montrent qui collecte, combien entre, où l’argent est dépensé et les
-preuves associées.
+preuves associées. Ce POC a été réalisé pour le hackathon Bitnob et intègre
+l’API Bitnob Sandbox pour tester le parcours de contribution Lightning et les
+opérations de paiement avec des fonds fictifs.
 
-> **Mode démo : aucun argent réel ne circule.** Les paiements utilisent le
-> simulateur Bitnob. L’application n’est ni une banque ni un portefeuille.
+> **Aucun argent réel ne circule.** Les opérations financières sont effectuées
+> soit dans la sandbox Bitnob, soit dans le simulateur local selon le mode
+> configuré. L’application n’est ni une banque ni un portefeuille.
+
+## POC Bitnob Sandbox
+
+Les essais d’intégration Bitnob ont été réalisés en environnement sandbox. Le
+parcours couvre la création d’une facture Lightning, sa tentative de paiement
+avec le solde test Bitnob, puis la lecture de son état auprès du fournisseur
+avant de confirmer la contribution. Les références et états affichés viennent
+de l’intégration; aucun fonds réel n’est déplacé.
+
+La démo guidée met en scène le parcours produit complet : choisir une collecte,
+contribuer, consulter le reçu et suivre les preuves et mouvements. Pour que la
+présentation jury montre les appels sandbox, le serveur de la démo doit être
+lancé avec `BITNOB_MODE=sandbox` et des identifiants sandbox valides. Dans
+l’interface, le badge « Simulation Bitnob » et le bouton de paiement depuis le
+compte test rendent le mode visible. Sans cette configuration, le projet
+démarre en mode `mock` : ce simulateur local sert aux essais de développement
+et aux tests automatisés, mais ne constitue pas un appel à l’API Bitnob.
+
+Le compte Bitnob sandbox doit autoriser les paiements Lightning sortants et
+disposer d’un solde de test. La sandbox peut refuser une opération si le compte
+ou le produit n’est pas activé; dans ce cas, la démo affiche l’échec au lieu de
+présenter la contribution comme payée.
 
 ## Cloner et démarrer en local
 
@@ -45,9 +70,11 @@ Ouvrez ensuite **http://localhost:8000**. L’API locale écoute sur le port
 
 Vous n’avez pas besoin de créer un fichier `.env` pour démarrer la démo. Le
 mode `mock` de Bitnob et le changement de compte de démonstration sont activés
-par défaut en développement. Au premier lancement, le serveur crée la base
-SQLite `delos.db` et génère les documents de démonstration. Ces fichiers restent
-sur votre machine et ne sont pas suivis par Git.
+par défaut en développement. Pour présenter le parcours relié à la sandbox,
+configurez les identifiants comme indiqué dans « Configuration et secrets ».
+Au premier lancement, le serveur crée la base SQLite `delos.db` et génère les
+documents de démonstration. Ces fichiers restent sur votre machine et ne sont
+pas suivis par Git.
 
 Dans l’application, utilisez l’avatar pour choisir Public, Awa, Moussa, Fatou,
 Ibrahima ou Modération. « Réinitialiser la démo » restaure les données de
@@ -94,6 +121,21 @@ Bitnob ou Resend.
 ```bash
 cp .env.example .env-prod
 ```
+
+Pour lancer la démo locale en sandbox, ajoutez les variables suivantes à
+`.env-dev` (ou `.env`) à la racine, puis redémarrez `pnpm dev` :
+
+```dotenv
+BITNOB_MODE=sandbox
+BITNOB_CLIENT_ID=votre_client_id_sandbox
+BITNOB_CLIENT_SECRET=votre_client_secret_sandbox
+DEMO_ACCESS=1
+```
+
+Utilisez les clés créées en mode Sandbox/Test dans le tableau de bord Bitnob.
+Ne collez jamais ces valeurs dans le README, le dépôt Git ou une capture
+publique. Si les clés sont absentes ou si le compte n’a pas les droits requis,
+le serveur ne peut pas démarrer en mode sandbox ou le paiement sera refusé.
 
 ## Déployer avec Docker
 
@@ -146,13 +188,24 @@ secrets doivent être saisis dans Vercel, jamais commités dans Git.
 
 ## Parcours de démonstration
 
-La démo guidée présente l’annuaire, une contribution Lightning, une dépense
-approuvée par plusieurs responsables, son paiement, les preuves, la vérification
-du registre, le lancement d’une cagnotte et la modération. En mode `mock`, les
-paiements sont simulés localement. En mode `sandbox`, une contribution tente de
-débiter le solde fictif du compte Bitnob configuré; le compte doit autoriser les
-paiements Lightning sortants. Aucun fonds réel n’est utilisé. Utilisez le bouton
-du panneau « Démo guidée » pour avancer étape par étape.
+La démo guidée présente l’annuaire, une contribution Lightning à une collecte
+existante, le reçu, une dépense approuvée par plusieurs responsables, son
+paiement, les preuves, la vérification du registre, le lancement d’une cagnotte
+et la modération. Trois scénarios humanitaires fictifs (Gaza, RDC et
+inondations au Sénégal) permettent aussi d’illustrer les collectes d’urgence :
+ils ne sont associés à aucune organisation réelle et aucun fonds ne leur est
+destiné. Le parcours de création d’un compte public est aussi
+accessible depuis le panneau « Contribuer » d’une collecte; après confirmation
+de l’adresse, la personne revient à la cause choisie et retrouve sa contribution
+dans « Mon espace ».
+
+En mode `sandbox`, l’action « Simuler le paiement » du panneau guidé utilise le
+compte test Bitnob configuré; sur la page de facture, l’action est nommée
+« Payer depuis le compte test Bitnob ». Le succès vient d’une relecture de
+l’état chez Bitnob, et le badge « Simulation Bitnob » rend l’environnement
+visible. En mode `mock`, les étapes sont jouées localement. Dans les deux modes,
+aucun fonds réel n’est utilisé. Utilisez le bouton du panneau « Démo guidée »
+pour avancer étape par étape.
 
 ## Documentation du produit
 

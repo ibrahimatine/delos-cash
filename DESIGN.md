@@ -192,6 +192,15 @@ Toutes les données sont fictives. Taux de démo : 1 BTC ≈ 37 000 000 FCFA.
 | Tournoi inter-quartiers 2026 | Association | Sport · Grand-Yoff | ASC Grand-Yoff (vérifiée) | 410 000 / 600 000 | 150 000 | 1/1 |
 | Fournitures pour la classe de CM2 | Cagnotte | Éducation · Rufisque | Cheikh Faye (identité vérifiée) | 180 000 / 200 000 | 150 000 | 0/1 · « Justificatif attendu (reste 5 jours) » |
 | Déplacement de l'équipe de basket féminine | Cagnotte | Sport · Thiès | Aminata Diallo et Rokhaya Ndiaye (vérifiées) | 320 000 / 500 000 | 150 000 | 1/1 |
+| Simulation · Aide alimentaire aux familles de Gaza | Scénario fictif | Urgence · Gaza | Ibrahima Fall (compte de démo) | 0 / 1 500 000 | 0 | 0/0 |
+| Simulation · Soutien aux familles déplacées en RDC | Scénario fictif | Urgence · Nord-Kivu | Ibrahima Fall (compte de démo) | 0 / 2 000 000 | 0 | 0/0 |
+| Simulation · Relèvement après des inondations au Sénégal | Scénario fictif | Urgence · Sénégal | Ibrahima Fall (compte de démo) | 0 / 1 000 000 | 0 | 0/0 |
+
+Les trois scénarios humanitaires sont des exemples de pitch, à solde nul. Ils
+ne sont affiliés à aucune ONG ou opération de secours et ne collectent ni ne
+transfèrent de fonds vers les régions citées. Le bénéficiaire affiché est lui
+aussi fictif. Les contributions de présentation passent uniquement par le
+compte de test Bitnob configuré.
 
 Catégories : Éducation, Santé, Urgence, Sport, Communauté.
 

@@ -283,7 +283,7 @@ export const LoginPage = () => {
   return (
     <Page title='Connexion'>
       <div className='max-w-md mx-auto flex flex-col gap-5'>
-        <PageTitle sub='Pour lancer une cagnotte, représenter une association ou approuver une dépense.'>
+        <PageTitle sub='Créez un compte public pour retrouver vos contributions, ou pour lancer et gérer une collecte.'>
           Votre compte
         </PageTitle>
         {demoMode.value && (

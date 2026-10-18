@@ -440,6 +440,32 @@ const ContributeSheet = ({ fund }: { fund: Fund }) => {
           publié pour les anonymes.
         </p>
       )}
+      {me.value
+        ? (
+          <p className="m-0 text-[12.5px] text-muted">
+            Cette contribution sera rattachée à votre compte et retrouvable
+            dans « Mon espace ».
+          </p>
+        )
+        : (
+          <div className="pt-3 border-t border-line">
+            <p className="m-0 mb-2 text-[13px] text-muted">
+              Créez un compte public pour retrouver votre contribution dans
+              « Mon espace ».
+            </p>
+            <Button
+              block
+              variant="secondary"
+              href={paths.login}
+              params={{
+                onglet: 'creer',
+                suite: `${paths.fund}?id=${encodeURIComponent(fund.id)}`,
+              }}
+            >
+              Créer un compte et revenir à cette cause
+            </Button>
+          </div>
+        )}
     </Sheet>
   )
 }

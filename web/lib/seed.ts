@@ -17,7 +17,7 @@ import { fcfa, toSats } from '../lib/format.ts'
 // real files of the demo documents (task-seed-files.ts)
 import { seedFiles } from '../lib/seed-files.ts'
 
-export const DB_VERSION = 5
+export const DB_VERSION = 6
 
 const files = seedFiles
 
@@ -346,6 +346,71 @@ export const buildSeed = (now = Date.now()): Db => {
         operator: 'Wave',
         last2: '81',
         relation: 'transporteur de l’équipe',
+      }],
+    },
+    'demo-gaza-aide': {
+      id: 'demo-gaza-aide',
+      code: 'C041',
+      kind: 'cagnotte',
+      launchers: [{ personId: 'ibrahima', status: 'accepted' }],
+      title: 'Simulation · Aide alimentaire aux familles de Gaza',
+      story:
+        'Scénario entièrement fictif pour présenter la traçabilité de DELOS ' +
+        'CASH. Cette fiche n’est liée à aucune ONG ni opération de secours ; ' +
+        'aucun fonds ne sera envoyé à Gaza.',
+      category: 'Urgence',
+      commune: 'Gaza',
+      goal: 1_500_000,
+      createdAt: at(3, 10, 0),
+      beneficiaries: [{
+        name: 'Bénéficiaire fictif · simulation DELOS',
+        operator: 'Wave',
+        last2: '00',
+        relation: 'aucun transfert réel',
+      }],
+    },
+    'demo-rdc-deplaces': {
+      id: 'demo-rdc-deplaces',
+      code: 'C042',
+      kind: 'cagnotte',
+      launchers: [{ personId: 'ibrahima', status: 'accepted' }],
+      title: 'Simulation · Soutien aux familles déplacées en RDC',
+      story:
+        'Scénario entièrement fictif pour montrer comment documenter une ' +
+        'collecte d’urgence. Cette fiche n’est liée à aucune ONG ni réponse ' +
+        'humanitaire ; aucun fonds ne sera envoyé en République démocratique ' +
+        'du Congo.',
+      category: 'Urgence',
+      commune: 'Nord-Kivu',
+      goal: 2_000_000,
+      createdAt: at(2, 10, 0),
+      beneficiaries: [{
+        name: 'Bénéficiaire fictif · simulation DELOS',
+        operator: 'Wave',
+        last2: '00',
+        relation: 'aucun transfert réel',
+      }],
+    },
+    'demo-inondations-senegal': {
+      id: 'demo-inondations-senegal',
+      code: 'C043',
+      kind: 'cagnotte',
+      launchers: [{ personId: 'ibrahima', status: 'accepted' }],
+      title: 'Simulation · Relèvement après des inondations au Sénégal',
+      story:
+        'Scénario entièrement fictif pour illustrer le suivi des besoins, ' +
+        'des contributions et des justificatifs après une inondation. Cette ' +
+        'fiche n’est liée à aucune association ni sinistre réel ; aucun fonds ' +
+        'ne sera versé à des sinistrés.',
+      category: 'Urgence',
+      commune: 'Sénégal',
+      goal: 1_000_000,
+      createdAt: at(1, 10, 0),
+      beneficiaries: [{
+        name: 'Bénéficiaire fictif · simulation DELOS',
+        operator: 'Wave',
+        last2: '00',
+        relation: 'aucun transfert réel',
       }],
     },
   }
