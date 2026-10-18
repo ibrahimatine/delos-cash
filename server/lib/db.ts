@@ -88,7 +88,14 @@ const postgresRequest = (request: Record<string, unknown>) => {
     if (result === 'timed-out') throw Error('Neon query timed out.')
   }
   const length = Atomics.load(control, 3)
-  const response = JSON.parse(decode.decode(payload.slice(0, length))) as {
+  const response = JSON.parse(decode.decode(payload.slice(0, length)), (
+    _key,
+    value,
+  ) =>
+    value && value.__pgBuffer === true
+      ? Buffer.from(value.value, 'base64')
+      : value
+  ) as {
     error?: string
     result?: unknown
   }
