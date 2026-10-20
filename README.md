@@ -196,6 +196,11 @@ docker compose down
 `docker compose down -v` supprime aussi le volume et donc la base, les documents
 et les sauvegardes.
 
+Pour mettre gratuitement cette configuration SQLite en ligne sur une VM
+Oracle Cloud Always Free, suivez [le guide de déploiement OCI](DEPLOY-OCI.md).
+La gratuité dépend de l’éligibilité et des capacités disponibles dans votre
+région.
+
 ## Déployer sur Vercel
 
 Le dépôt est configuré pour une interface Vite et une fonction Node.js Vercel.

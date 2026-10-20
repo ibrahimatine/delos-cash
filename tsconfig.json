@@ -10,7 +10,7 @@
     "noEmit": true,
     "skipLibCheck": true,
     "types": ["node"],
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "baseUrl": ".",
     "paths": { "@signals": ["web/lib/reactive.ts"] }
   },
