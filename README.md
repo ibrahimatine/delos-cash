@@ -217,13 +217,10 @@ variables dans les paramètres Vercel :
 - `BITNOB_MODE=mock` pour la démo, ou `sandbox` avec les clés Bitnob sandbox
 - `DEMO_ACCESS=1` uniquement pour une démonstration publique
 
-Le forfait Vercel Hobby ne permet qu'un cron quotidien. Pour conserver une
-réconciliation fréquente sans abonnement payant, le dépôt contient un workflow
-GitHub Actions qui appelle `/api/cron/reconcile` toutes les cinq minutes.
-Ajoutez le secret `CRON_SECRET` dans les secrets Actions du dépôt GitHub, avec
-exactement la même valeur que dans Vercel. GitHub peut retarder les tâches
-planifiées lorsque ses runners sont chargés. Le webhook Bitnob reste disponible
-sur `/api/webhooks/bitnob`.
+Le webhook Bitnob reste disponible sur `/api/webhooks/bitnob`. Un workflow GitHub
+Actions planifié peut appeler `/api/cron/reconcile` si cette application est
+hébergée et que l’URL ainsi que `CRON_SECRET` sont configurés dans le workflow
+et les secrets du dépôt.
 
 Les pièces privées sont conservées dans Blob et renvoyées seulement après les
 contrôles d’accès DELOS. Ne configurez pas le magasin Blob en mode public. Les
